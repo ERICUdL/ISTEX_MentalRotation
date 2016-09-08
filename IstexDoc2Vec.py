@@ -11,8 +11,9 @@
 
 
 # Author : Lucie Martinet <lucie.martinet@univ-lorraine.fr>
-#codeauthor: Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
+# co-author: Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
 # Affiliation: University of Lyon, ERIC Laboratory, Lyon2
+
 # Thanks to ISTEX project for the foundings
 
 
@@ -27,9 +28,9 @@ class LoadFileJson() :
 		self.count = 0
 
 # loads randomly and as uniformly as possible in years, n istex doc
-	def LoadNRandDocumentsIstexAndUCBL(self, directory, ucbl) :
+	def LoadDocumentsIstexAndUCBL(self, directory, ucbl) :
+		first_year = 1990
 		last_year = 2016
-		first_year = 1990 # 1990
 ##UCBL data loading
 		r=open(ucbl,'r')
 		data=json.load(r)
@@ -37,7 +38,7 @@ class LoadFileJson() :
 		# for UCBL data
 		for doc in data :
 			line = doc["title"]+" __ " + doc["abstract"]
-			wordsl = self.UnicodAndParser(line)
+			wordsl = self.UnicodAndTokenize(line)
 			try :
 				yield LabeledSentence(words = wordsl ,tags=['DOC_%s' % str(self.count)]) # tags
 				self.index["UCBL"+doc["doi"]] = str(self.count)
@@ -65,7 +66,7 @@ class LoadFileJson() :
 				if "abstract" in doc :
 					abstract = doc["abstract"]
 				line = doc["title"]+" __ " + abstract
-				wordsl = self.UnicodAndParser(line)
+				wordsl = self.UnicodAndTokenize(line)
 				try :
 					yield LabeledSentence(words = wordsl ,tags=['DOC_%s' % str(self.count)])
 					self.index["ISTEX"+doc["doi"]] = str(self.count)
@@ -73,7 +74,7 @@ class LoadFileJson() :
 				except : pass
 		print self.count
 
-	def UnicodAndParser(self,line) :
+	def UnicodAndTokenize(self,line) :
 			try :
 				line = line.encode('utf-8','ignore').decode('utf-8')
 			except:
@@ -91,13 +92,13 @@ class LoadFileJson() :
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--istex_dir", default='DataJson/IstexData/', type=str) #contains .json files
-	parser.add_argument("--ucbl_file", default='DataJson/sportArticlesAsIstex.json', type=str) #is a .json file
-	parser.add_argument("--output_file", default='UcblIstex_matrix_model_wo_parsing_lower', type=str) #is a file containing the model: you can use it with Doc2Vec.load
-	parser.add_argument("--vec_size", default=500, type=int)
-	parser.add_argument("--window", default=25, type=int)
-	parser.add_argument("--min_count", default=10, type=int)
-	parser.add_argument("--iter", default=7, type=int)
+	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) #contains .json files
+	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex.json', type=str) #is a .json file
+	parser.add_argument("--output_file", default='UcblIstex_matrix_model', type=str) # is a file containing the model: you can use it with Doc2Vec.load
+	parser.add_argument("--vec_size", default=300, type=int)
+	parser.add_argument("--window", default=8, type=int)
+	parser.add_argument("--min_count", default=5, type=int)
+	parser.add_argument("--iter", default=5, type=int)
 
 	args = parser.parse_args()
 	istex = args.istex_dir
@@ -108,7 +109,7 @@ if __name__ == "__main__" :
 	min_count = args.min_count
 	n_iter = args.iter
 	corpus = LoadFileJson()
-	data = corpus.LoadNRandDocumentsIstexAndUCBL(istex, ucbl) # "sportArticlesAsIstex.json"
+	data = corpus.LoadDocumentsIstexAndUCBL(istex, ucbl) # "sportArticlesAsIstex.json"
 
 	model = Doc2Vec(min_count=min_count, size=v_size, workers=6, iter=n_iter, window=window_size) # use fixe rate of learning
 	model.build_vocab(data)
