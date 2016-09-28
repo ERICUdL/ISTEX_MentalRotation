@@ -42,14 +42,16 @@ if __name__ == "__main__" :
 	parser.add_argument("--wiki_dir", default="sample_data/wiki", type=str) # contains wikipedia text files
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # contains .json files
 	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex.json', type=str) # is a .json file
-	parser.add_argument("--max_nb_wiki", default=200000, type=int) # maximum number of Wikipedia paragraphs to use
-	parser.add_argument("--paragraphs_per_article", default=2, type=int)
+	parser.add_argument("--max_nb_wiki", default=100000, type=int) # maximum number of Wikipedia paragraphs to use
+	parser.add_argument("--paragraphs_per_article", default=2, type=int) # Maximum number of paragraphs to load per article
 	parser.add_argument("--vectorizer_type", default="tfidf", type=str) # possible values: "tfidf" and "count", futurework: "doc2vec"
-	parser.add_argument("--vec_size", default=150, type=int)
-	parser.add_argument("--min_count", default=10, type=int)
-	parser.add_argument("--max_df", default=1.0, type=float) # how much vocabulary percent to keep at max based on frequency
+	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
+	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
+	parser.add_argument("--vec_size", default=100, type=int) # the size of the vector in the semantics space
+	parser.add_argument("--min_count", default=20, type=int) # minimum frequency of the token to be included in the vocabulary
+	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=False, type=bool) # embed IPython to use the decomposed matrix while running
-	parser.add_argument("--compress", default="json", type=str)
+	parser.add_argument("--compress", default="json", type=str) # for dumping resulted files
 
 	args = parser.parse_args()
 	istex = args.istex_dir
@@ -62,6 +64,8 @@ if __name__ == "__main__" :
 	max_nb_wiki = args.max_nb_wiki
 	paragraphs_per_article = args.paragraphs_per_article
 	vectorizer_type = args.vectorizer_type
+	mx_ngram = args.mx_ngram
+	mn_ngram =  args.mn_ngram
 	n_components = args.vec_size
 	min_count = args.min_count
 	max_df = args.max_df
@@ -73,11 +77,11 @@ if __name__ == "__main__" :
 	if vectorizer_type == "count":
 		vectorizer = CountVectorizer(input='content',
 			         analyzer='word', stop_words='english',
-			         min_df=min_count,  ngram_range=(1, 3), max_df=max_df)
+			         min_df=min_count,  ngram_range=(mn_ngram, mx_ngram), max_df=max_df)
 	elif vectorizer_type == "tfidf":
 		vectorizer = TfidfVectorizer(input='content',
 			         analyzer='word', stop_words='english',
-			         min_df=min_count,  ngram_range=(1, 3), max_df=max_df)
+			         min_df=min_count,  ngram_range=(mn_ngram, mx_ngram), max_df=max_df)
 	else:
 		raise NameError('Please check your vectorizer option. It must be either "tfidf" or "count"')
 
@@ -92,8 +96,11 @@ if __name__ == "__main__" :
 	print 'explained variance ratio sum', svd.explained_variance_ratio_.sum()
 
 	#Dump and clean-up the vectorized bow to free some memory	
-	pickle.dump(bow, open('vectorized_bow.pickle','wb'))
-	bow = []
+	try:
+		pickle.dump(bow, open('vectorized_bow.pickle','wb'))
+		bow = []
+	except:
+		bow = []
 
 	#Compute the average cosine similarity withen ucbl vectors
 	sum_sim = 0
