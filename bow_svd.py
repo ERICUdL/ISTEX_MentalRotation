@@ -20,22 +20,9 @@ import os, argparse, pickle, json
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
-from utils import Paragraphs
+from utils import Paragraphs, Lemmatizer
 import IPython
 
-def get_filenames(path_to_corpus):
-	filenames = []
-	for path, subdirs, files in os.walk(path_to_corpus):
-	    for name in files:
-	        filenames.append(os.path.join(path, name))
-	        
-	return filenames
-
-def sense_tokenizer(line):
-	try:
-		return transform_doc(parser(line)).split()
-	except:
-		return line.split()
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
@@ -43,14 +30,16 @@ if __name__ == "__main__" :
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # contains .json files
 	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex.json', type=str) # is a .json file
 	parser.add_argument("--max_nb_wiki", default=100000, type=int) # maximum number of Wikipedia paragraphs to use
-	parser.add_argument("--paragraphs_per_article", default=2, type=int) # Maximum number of paragraphs to load per article
+	parser.add_argument("--paragraphs_per_article", default=2, type=int) # maximum number of paragraphs to load per article
 	parser.add_argument("--vectorizer_type", default="tfidf", type=str) # possible values: "tfidf" and "count", futurework: "doc2vec"
+	parser.add_argument("--lemmatizer", default=0, type=int) # for using lemmatization_tokenizer
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
+	parser.add_argument("--stop_words", default=0, type=int) # filtering out English stop-words
 	parser.add_argument("--vec_size", default=100, type=int) # the size of the vector in the semantics space
 	parser.add_argument("--min_count", default=20, type=int) # minimum frequency of the token to be included in the vocabulary
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
-	parser.add_argument("--debug", default=False, type=bool) # embed IPython to use the decomposed matrix while running
+	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
 	parser.add_argument("--compress", default="json", type=str) # for dumping resulted files
 
 	args = parser.parse_args()
@@ -64,8 +53,18 @@ if __name__ == "__main__" :
 	max_nb_wiki = args.max_nb_wiki
 	paragraphs_per_article = args.paragraphs_per_article
 	vectorizer_type = args.vectorizer_type
+	lemmatizer = args.lemmatizer
+	if lemmatizer:
+		lemmatizer = Lemmatizer()
+	else:
+		lemmatizer = None
 	mx_ngram = args.mx_ngram
 	mn_ngram =  args.mn_ngram
+	stop_words = args.stop_words
+	if stop_words:
+		stop_words = 'english'
+	else:
+		stop_words = None
 	n_components = args.vec_size
 	min_count = args.min_count
 	max_df = args.max_df
@@ -76,11 +75,11 @@ if __name__ == "__main__" :
 
 	if vectorizer_type == "count":
 		vectorizer = CountVectorizer(input='content',
-			         analyzer='word', stop_words='english',
+			         analyzer='word', stop_words=stop_words, tokenizer=lemmatizer,
 			         min_df=min_count,  ngram_range=(mn_ngram, mx_ngram), max_df=max_df)
 	elif vectorizer_type == "tfidf":
 		vectorizer = TfidfVectorizer(input='content',
-			         analyzer='word', stop_words='english',
+			         analyzer='word', stop_words=stop_words, tokenizer=lemmatizer,
 			         min_df=min_count,  ngram_range=(mn_ngram, mx_ngram), max_df=max_df)
 	else:
 		raise NameError('Please check your vectorizer option. It must be either "tfidf" or "count"')
@@ -113,21 +112,33 @@ if __name__ == "__main__" :
 			sum_sim += sim
 	print 'average cosine similarity within ucbl articles', sum_sim / compare_count
 
-	if debug:
-		IPython.embed()
-	print "Now dumping results. This would take several minutes..."	
+	print "Now dumping results. This might take several minutes depending on the corpus size..."	
 	if compress == "pickle":
-		pickle.dump(decomposed_bow, open('output_svd.pickle','wb'))
-		pickle.dump(paragraphs.index, open('output_paragraph_index.pickle','wb'))
-		pickle.dump(paragraphs.inverse_index, open('output_paragraph_inverse_index.pickle','wb'))
+		try:
+			pickle.dump(decomposed_bow, open('output_svd.pickle','wb'))
+		except:
+			print "we could not dump the decomposed_bow in pickle. Using pickle instead:"
+			try:
+				json.dump(decomposed_bow, open('output_svd.json','wb'))
+			except:
+				print "could not dump it into json, using numpy dump instead..."
+				decomposed_bow.dump('output_svd.mat')
+
 	elif compress == "json":
 		try:
-			pickle.dump(decomposed_bow, open('output_svd.json','wb'))
-			pickle.dump(paragraphs.index, open('output_paragraph_index.json','wb'))
-			pickle.dump(paragraphs.inverse_index, open('output_paragraph_inverse_index.json','wb'))
+			json.dump(decomposed_bow, open('output_svd.json','wb'))
 		except:
-			print "we could not dump the decomposed_bow in json. try pickle instead"
-			IPython.embed()
+			print "we could not dump the decomposed_bow in json. Using pickle instead:"
+			try:
+				pickle.dump(decomposed_bow, open('output_svd.pickle','wb'))
+			except:
+				print "could not dump it into pickle, using numpy dump instead..."
+				decomposed_bow.dump('output_svd.mat')
 	else:
 		raise NameError('Unrecognized compress option. Must be either "pickle" or "json"')
+	json.dump(paragraphs.index, open('output_paragraph_index.json','wb'))
+	json.dump(paragraphs.inverse_index, open('output_paragraph_inverse_index.json','wb'))
 	print "done successfully!"
+
+	if debug:
+		IPython.embed()

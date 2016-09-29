@@ -20,6 +20,15 @@ import os
 import json
 from gensim.models.doc2vec import LabeledSentence
 import string as st
+import spacy.en 
+parser = spacy.load('en')
+
+class Lemmatizer(object):
+ 	def __init__(self):
+ 		self.parser = parser
+ 	def __call__(self, line):
+ 		line = self.parser(line)
+ 		return [t.lemma_ for t in line if not t.lemma_.isdigit()]
 
 class Paragraphs(object):
 	def __init__(self, istex=None, ucbl=None, wiki=None, tokenize=False, max_nb_wiki_paragraphs=None,
@@ -49,7 +58,8 @@ class Paragraphs(object):
 			for doc in data :
 				line = doc["title"]+" __ " + doc["abstract"]
 				if self.tokenize:
-					words_lst = self.UnicodAndTokenize(line)
+					u_line = self.to_unicode(line)
+					words_lst = self.tokenize(u_line)
 					try :
 						self.yeild_element(words_lst, tag=self.istex_tag, count=self.paper_count)
 						self.index["UCBL"+doc["doi"]] = str(self.paper_count)
@@ -91,7 +101,8 @@ class Paragraphs(object):
 						abstract = doc["abstract"]
 					line = doc["title"]+" __ " + abstract
 					if self.tokenize:
-						words_lst = self.UnicodAndTokenize(line)
+						u_line = self.to_unicode(line)
+						words_lst = self.tokenize(u_line)
 						try :
 							self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
 							self.index["ISTEX"+doc["doi"]] = str(self.paper_count)
@@ -118,7 +129,8 @@ class Paragraphs(object):
 
 						if len(line.split()) > 2 and line[:8] != '<doc id=': # to verify if the line is a paragraph 
 							if self.tokenize:
-								words_lst = self.UnicodAndTokenize(line)
+								u_line = self.to_unicode(line)
+								words_lst = self.tokenize(u_line)
 								self.yield_element(words_lst, tag=self.wiki_tag, count=self.wiki_count)
 							else:
 								yield line
@@ -137,7 +149,7 @@ class Paragraphs(object):
 		print 'number of ucbl articles: ', self.ucbl_count
 		print 'number of istex articles other than ucbl: ', self.istex_count
 
-	def UnicodAndTokenize(self,line) :
+	def to_unicode(self,line) :
 			try :
 				line = line.encode('utf-8','ignore').decode('utf-8')
 			except:
@@ -149,10 +161,13 @@ class Paragraphs(object):
 						if w[-1] in ['?','.','!'] :
 							line2 += w[-1] + " "
 				line = line2.rstrip() # remove last space if it exists
+			return line
 
-			lst = line.lower().split()
-			lst = [ i for i in lst if not i.isdigit()]
-			return lst
+	def tokenize(self, line):
+
+		lst = line.lower().split()
+		lst = [ i for i in lst if not i.isdigit()]
+		return lst
 
 	def yield_element(self, words_lst, tag=None, count=None):
 		if tag is not None:
