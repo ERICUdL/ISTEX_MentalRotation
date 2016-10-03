@@ -9,5 +9,6 @@
 """Helper functions."""
 
 from .load_corpus import Paragraphs
+from .load_corpus import Lemmatizer
 
-__all__ = ("Paragraphs",)
+__all__ = ("Paragraphs", "Lemmatizer")
