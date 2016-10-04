@@ -41,6 +41,7 @@ if __name__ == "__main__" :
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
 	parser.add_argument("--compress", default="json", type=str) # for dumping resulted files
+	parser.add_argument("--out_dir", default="results", type=str) # name of the output directory
 
 	args = parser.parse_args()
 	istex = args.istex_dir
@@ -70,6 +71,7 @@ if __name__ == "__main__" :
 	max_df = args.max_df
 	debug = args.debug
 	compress = args.compress
+	out_dir = args.out_dir
 	
 	paragraphs = Paragraphs(istex=istex, ucbl=ucbl, wiki=wiki_dir, max_nb_wiki_paragraphs=max_nb_wiki, paragraphs_per_article=paragraphs_per_article)
 
@@ -94,11 +96,14 @@ if __name__ == "__main__" :
 	print 'shape of the SVD decomposed bag_of_words', decomposed_bow.shape
 	print 'explained variance ratio sum', svd.explained_variance_ratio_.sum()
 
-	#Dump and clean-up the vectorized bow to free some memory	
+	#Dump and clean-up the vectorized bow to free some memory
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
 	try:
-		pickle.dump(bow, open('vectorized_bow.pickle','wb'))
+		pickle.dump(bow, open(out_dir+'/vectorized_bow.pickle','wb'))
 		bow = []
 	except:
+		bow.dump(out_dir+'/vectorized_bow.spmat','wb')
 		bow = []
 
 	#Compute the average cosine similarity withen ucbl vectors
@@ -115,29 +120,29 @@ if __name__ == "__main__" :
 	print "Now dumping results. This might take several minutes depending on the corpus size..."	
 	if compress == "pickle":
 		try:
-			pickle.dump(decomposed_bow, open('output_svd.pickle','wb'))
+			pickle.dump(decomposed_bow, open(out_dir+'/output_svd.pickle','wb'))
 		except:
 			print "we could not dump the decomposed_bow in pickle. Using pickle instead:"
 			try:
-				json.dump(decomposed_bow, open('output_svd.json','wb'))
+				json.dump(decomposed_bow, open(out_dir+'/output_svd.json','wb'))
 			except:
 				print "could not dump it into json, using numpy dump instead..."
-				decomposed_bow.dump('output_svd.mat')
+				decomposed_bow.dump(out_dir+'/output_svd.mat')
 
 	elif compress == "json":
 		try:
-			json.dump(decomposed_bow, open('output_svd.json','wb'))
+			json.dump(decomposed_bow, open(out_dir+'/output_svd.json','wb'))
 		except:
 			print "we could not dump the decomposed_bow in json. Using pickle instead:"
 			try:
-				pickle.dump(decomposed_bow, open('output_svd.pickle','wb'))
+				pickle.dump(decomposed_bow, open(out_dir+'/output_svd.pickle','wb'))
 			except:
 				print "could not dump it into pickle, using numpy dump instead..."
-				decomposed_bow.dump('output_svd.mat')
+				decomposed_bow.dump(out_dir+'/output_svd.mat')
 	else:
 		raise NameError('Unrecognized compress option. Must be either "pickle" or "json"')
-	json.dump(paragraphs.index, open('output_paragraph_index.json','wb'))
-	json.dump(paragraphs.inverse_index, open('output_paragraph_inverse_index.json','wb'))
+	json.dump(paragraphs.index, open(out_dir+'/output_paragraph_index.json','wb'))
+	json.dump(paragraphs.inverse_index, open(out_dir+'/output_paragraph_inverse_index.json','wb'))
 	print "done successfully!"
 
 	if debug:
