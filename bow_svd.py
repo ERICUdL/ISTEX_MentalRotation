@@ -18,9 +18,8 @@
 
 import os, argparse, pickle, json
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import TruncatedSVD
-from utils import Paragraphs, Lemmatizer
+from utils import Paragraphs, Lemmatizer, avg_inner_sim, n_neg_sampling_avg_inner_sim
 import IPython
 
 
@@ -35,11 +34,12 @@ if __name__ == "__main__" :
 	parser.add_argument("--lemmatizer", default=0, type=int) # for using lemmatization_tokenizer
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
-	parser.add_argument("--stop_words", default=0, type=int) # filtering out English stop-words
+	parser.add_argument("--stop_words", default=1, type=int) # filtering out English stop-words
 	parser.add_argument("--vec_size", default=100, type=int) # the size of the vector in the semantics space
 	parser.add_argument("--min_count", default=20, type=int) # minimum frequency of the token to be included in the vocabulary
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
+	parser.add_argument("--nb_neg", default=100, type=int) # number of negative samplings times used for evaluation
 	parser.add_argument("--compress", default="json", type=str) # for dumping resulted files
 	parser.add_argument("--out_dir", default="results", type=str) # name of the output directory
 
@@ -70,6 +70,7 @@ if __name__ == "__main__" :
 	min_count = args.min_count
 	max_df = args.max_df
 	debug = args.debug
+	nb_neg = args.nb_neg
 	compress = args.compress
 	out_dir = args.out_dir
 	
@@ -106,16 +107,18 @@ if __name__ == "__main__" :
 		bow.dump(out_dir+'/vectorized_bow.spmat','wb')
 		bow = []
 
-	#Compute the average cosine similarity withen ucbl vectors
-	sum_sim = 0
-	compare_count = 0
-	ucbl_count = paragraphs.ucbl_count
-	for i in range(0, ucbl_count):
-	    for j in range(i+1, ucbl_count):
-			sim = cosine_similarity(decomposed_bow[i], decomposed_bow[j])
-			compare_count += 1
-			sum_sim += sim
-	print 'average cosine similarity within ucbl articles', sum_sim / compare_count
+	#Compute the average cosine similarity within ucbl vectors
+	ucbl_lst = decomposed_bow[:paragraphs.ucbl_count]
+	ucbl_inner_sim =  avg_inner_sim(ucbl_lst)
+	print 'average cosine similarity within ucbl articles', ucbl_inner_sim
+
+	#Compute the average cosine similarity within articles randomly selected from ISTEX (other than ucbl)
+	neg_inner_sim = n_neg_sampling_avg_inner_sim(decomposed_bow, paragraphs.ucbl_count, nb_neg)
+	print 'average cosine similarity within articles randomly selected from ISTEX articles (same set size of ucbl)', neg_inner_sim
+	
+	#Compute the estimated represeantation quality
+	rep_eval = ucbl_inner_sim - neg_inner_sim
+	print 'Representation quality based on inner_similarity approach', rep_eval
 
 	print "Now dumping results. This might take several minutes depending on the corpus size..."	
 	if compress == "pickle":
