@@ -13,7 +13,7 @@
 # co-author : Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
 # Affiliation: University of Lyon, ERIC Laboratory, Lyon2
 
-# Thanks to ISTEX project for the foundings
+# Thanks to ISTEX project for the funding
 
 
 import os, argparse, pickle, json
@@ -40,7 +40,7 @@ if __name__ == "__main__" :
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
 	parser.add_argument("--nb_neg", default=100, type=int) # number of negative samplings times used for evaluation
-	parser.add_argument("--compress", default="json", type=str) # for dumping resulted files
+	parser.add_argument("--compress", default="pickle", type=str) # for dumping resulted files
 	parser.add_argument("--out_dir", default="results", type=str) # name of the output directory
 
 	args = parser.parse_args()
@@ -104,8 +104,11 @@ if __name__ == "__main__" :
 		pickle.dump(bow, open(out_dir+'/vectorized_bow.pickle','wb'))
 		bow = []
 	except:
-		bow.dump(out_dir+'/vectorized_bow.spmat','wb')
-		bow = []
+		try:
+			bow.dump(out_dir+'/vectorized_bow.spmat','wb')
+			bow = []
+		except:
+			bow = []
 
 	#Compute the average cosine similarity within ucbl vectors
 	ucbl_lst = decomposed_bow[:paragraphs.ucbl_count]
