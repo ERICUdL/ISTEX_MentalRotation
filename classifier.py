@@ -54,6 +54,14 @@ def balanced_dataset(pos_lst, neg_lst, size):
 	return np.vstack((positives,negatives))
 
 
+def sorted_results(sim_results, doc_id_dict, count_positive):
+	results = dict()
+	for i, score in enumerate(sim_results[:,1]):
+		doc_id = doc_id_dict[str(count_positive + i)]
+		results[doc_id[5:]] = score
+	sorted_results = OrderedDict(sorted(results.items(), key=lambda k: k[1], reverse=True))
+	return sorted_results
+
 def search_top_relevant(sim_results, doc_id_dict, sim_th, count_positive):
 	related = sim_results[:,1] > sim_th
 	related_indecies = []
@@ -61,6 +69,8 @@ def search_top_relevant(sim_results, doc_id_dict, sim_th, count_positive):
 		if r:
 			related_indecies.append((i, sim_results[i,1]))
 	results = dict()
+	doc_ids = doc_id_dict.keys()
+	nb_doc_ids = len(doc_ids)
 	for i, score in related_indecies:
 		doc_id = doc_id_dict[str(count_positive + i)]
 		results[doc_id[5:]] = score
@@ -82,6 +92,12 @@ if __name__ == "__main__" :
 	                     help='float number to indicate the percentage of the test split')
 	parser.add_argument("--min_relevant", default=10, type=int,
 	                     help='minimum number ot relevant document to return')
+	parser.add_argument("--min_sim", default=0.25, type=float,
+	                     help='minimum similarity for a relevant document to be returned')
+	parser.add_argument("--return_all", default=0, type=int,
+	                     help='1 if you want to retun all ranked results. 0 otherwise')
+	parser.add_argument("--step", default=0.001, type=float,
+	                     help='The step size for reducing the similarity threshold')
 	parser.add_argument("--training_size", default=300, type=int,
 	                     help='the size of training dataset for the classifier')
 	parser.add_argument("--testing_size", default=100, type=int,
@@ -103,6 +119,10 @@ if __name__ == "__main__" :
 	count_positive = args.count_positive
 	test_split =  args.test_split
 	min_relevant = args.min_relevant
+	min_sim = args.min_sim
+	return_all = args.return_all
+	step = args.step
+	step = -1 * step
 	training_size = args.training_size
 	testing_size = args.testing_size
 	n_iterations = args.n_iterations
@@ -144,14 +164,19 @@ if __name__ == "__main__" :
 	classifier.fit(X, y)
 	sim_results = classifier.predict_proba(neg_lst)
 	doc_id_dict = json.load(open(doc_dict,'rb'))
-	for sim_th in np.arange(1.0,0.25,-0.001):
-		results = search_top_relevant(sim_results, doc_id_dict, sim_th,
-		                              count_positive)
-		if len(results) > min_relevant:
-			print 'doi of articles that are classified as mental-retotation'
-			print 'with a probability value of at least ', sim_th
-			print results
-			break
+	if return_all:
+		results = sorted_results(sim_results, doc_id_dict, count_positive)
+		print len(results)
+
+	else:
+		for sim_th in np.arange(1.0, min_sim, step):
+			results = search_top_relevant(sim_results, doc_id_dict, sim_th,
+			                              count_positive)
+			if len(results) > min_relevant:
+				print 'number of ISTEX_ID of articles that are classified as mental-retotation'
+				print 'with a probability value of at least ', sim_th
+				print len(results)
+				break
 	
 	# dumping results
 	if not os.path.exists(out_dir):
