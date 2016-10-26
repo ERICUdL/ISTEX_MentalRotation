@@ -148,7 +148,6 @@ if __name__ == "__main__" :
 	else:
 		raise NameError('Unrecognized compress option. Must be either "pickle" or "json"')
 	json.dump(paragraphs.index, open(out_dir+'/output_paragraph_index.json','wb'))
-	json.dump(paragraphs.inverse_index, open(out_dir+'/output_paragraph_inverse_index.json','wb'))
 	print "done successfully!"
 
 	if debug:

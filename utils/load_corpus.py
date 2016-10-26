@@ -42,7 +42,6 @@ class Paragraphs(object):
 		self.istex_tag = istex_tag
 		self.wiki_tag = wiki_tag
 		self.index = dict()
-		self.inverse_index = dict()
 		self.paper_count = 0
 		self.wiki_count = 0
 
@@ -61,16 +60,13 @@ class Paragraphs(object):
 					u_line = self.to_unicode(line)
 					words_lst = self.tokenize(u_line)
 					try :
-						self.yeild_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-						self.index["UCBL"+doc["doi"]] = str(self.paper_count)
-						self.inverse_index[str(self.paper_count)] = "UCBL"+doc["doi"]
-						self.paper_count += 1
+						self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
+						self.index[self.paper_count] = "UCBL"+doc["doi"]
 					except : continue
 				else:
 					yield line
-					self.index["UCBL"+doc["doi"]] = str(self.paper_count)
-					self.inverse_index[str(self.paper_count)] = "UCBL"+doc["doi"]
-					self.paper_count += 1
+					self.index[self.paper_count] = "UCBL"+doc["doi"]
+				self.paper_count += 1
 		self.ucbl_count = self.paper_count
 ## ISTEX data loading
 		first_year = 1990
@@ -105,15 +101,12 @@ class Paragraphs(object):
 						words_lst = self.tokenize(u_line)
 						try :
 							self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-							self.index["ISTEX"+doc["doi"]] = str(self.paper_count)
-							self.inverse_index[str(self.paper_count)] = "ISTEX"+doc["doi"]
-							self.paper_count += 1
+							self.index[self.paper_count] = "ISTEX"+doc["doi"]
 						except : pass
 					else:
 						yield line
-						self.index["ISTEX"+doc["doi"]] = str(self.paper_count)
-						self.inverse_index[str(self.paper_count)] = "ISTEX"+doc["doi"]
-						self.paper_count += 1
+						self.index[self.paper_count] = "ISTEX"+doc["doi"]
+					self.paper_count += 1
 		self.istex_count = self.paper_count - self.ucbl_count
 ## Wikipedia data itteration
 		if self.wiki is not None:
@@ -134,6 +127,8 @@ class Paragraphs(object):
 								self.yield_element(words_lst, tag=self.wiki_tag, count=self.wiki_count)
 							else:
 								yield line
+							self.index[self.paper_count] = "WIKI"+str(self.wiki_count)
+							self.paper_count += 1
 							self.wiki_count += 1
 
 							if self.paragraphs_per_article is not None:
@@ -144,8 +139,8 @@ class Paragraphs(object):
 
 			print 'number of wikipedia paragraphs: ', self.wiki_count
 
-		print 'number of ISTEX abstracts: ', self.paper_count
-		print 'total number of paragraphs and abstracts: ', self.count()
+		print 'number of abstracts: ', self.istex_count + self.ucbl_count
+		print 'total number of paragraphs and abstracts: ', self.paper_count
 		print 'number of ucbl articles: ', self.ucbl_count
 		print 'number of istex articles other than ucbl: ', self.istex_count
 
@@ -174,7 +169,3 @@ class Paragraphs(object):
 			yield LabeledSentence(words=words_lst ,tags=[tag+'_%s' % str(count)])
 		else:
 			yield words_lst
-
-	def count(self):
-		count = self.paper_count + self.wiki_count
-		return count
