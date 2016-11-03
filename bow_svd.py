@@ -11,7 +11,7 @@
 
 # co-author : Lucie Martinet <lucie.martinet@univ-lorraine.fr>
 # co-author : Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
-# Affiliation: University of Lyon, ERIC Laboratory, Lyon2
+# Affiliation: University of Lyon, ERIC Laboratory, Lyon2, University of Lorraine
 
 # Thanks to ISTEX project for the funding
 
@@ -27,7 +27,7 @@ if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--wiki_dir", default="sample_data/wiki", type=str) # contains wikipedia text files
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # contains .json files
-	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex.json', type=str) # is a .json file
+	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_183.json', type=str) # is a .json file
 	parser.add_argument("--max_nb_wiki", default=100000, type=int) # maximum number of Wikipedia paragraphs to use
 	parser.add_argument("--paragraphs_per_article", default=2, type=int) # maximum number of paragraphs to load per article
 	parser.add_argument("--vectorizer_type", default="tfidf", type=str) # possible values: "tfidf" and "count", futurework: "doc2vec"
@@ -35,11 +35,11 @@ if __name__ == "__main__" :
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
 	parser.add_argument("--stop_words", default=1, type=int) # filtering out English stop-words
-	parser.add_argument("--vec_size", default=100, type=int) # the size of the vector in the semantics space
+	parser.add_argument("--vec_size", default=50, type=int) # the size of the vector in the semantics space
 	parser.add_argument("--min_count", default=20, type=int) # minimum frequency of the token to be included in the vocabulary
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
-	parser.add_argument("--nb_neg", default=100, type=int) # number of negative samplings times used for evaluation
+	parser.add_argument("--nb_neg_samplings", default=100, type=int) # number of negative samplings times used for evaluation
 	parser.add_argument("--compress", default="pickle", type=str) # for dumping resulted files
 	parser.add_argument("--out_dir", default="results", type=str) # name of the output directory
 
@@ -70,7 +70,7 @@ if __name__ == "__main__" :
 	min_count = args.min_count
 	max_df = args.max_df
 	debug = args.debug
-	nb_neg = args.nb_neg
+	nb_neg_samplings = args.nb_neg_samplings
 	compress = args.compress
 	out_dir = args.out_dir
 	
@@ -116,7 +116,7 @@ if __name__ == "__main__" :
 	print 'average cosine similarity within ucbl articles', ucbl_inner_sim
 
 	#Compute the average cosine similarity within articles randomly selected from ISTEX (other than ucbl)
-	neg_inner_sim = n_neg_sampling_avg_inner_sim(decomposed_bow, paragraphs.ucbl_count, nb_neg)
+	neg_inner_sim = n_neg_sampling_avg_inner_sim(decomposed_bow, paragraphs.ucbl_count, nb_neg_samplings)
 	print 'average cosine similarity within articles randomly selected from ISTEX articles (same set size of ucbl)', neg_inner_sim
 	
 	#Compute the estimated represeantation quality
@@ -148,6 +148,9 @@ if __name__ == "__main__" :
 	else:
 		raise NameError('Unrecognized compress option. Must be either "pickle" or "json"')
 	json.dump(paragraphs.index, open(out_dir+'/output_paragraph_index.json','wb'))
+	json.dump(paragraphs.inversed_index, open(out_dir+'/output_paragraph_inversed_index.json','wb'))
+	print 'size of index', len(paragraphs.index)
+	print 'size of inversed_index', len(paragraphs.inversed_index)
 	print "done successfully!"
 
 	if debug:
