@@ -9,9 +9,9 @@
 
 #Load corpus data
 
-
-# Author: Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
-# Affiliation: University of Lyon, ERIC Laboratory, Lyon2
+# co-author : Lucie Martinet <lucie.martinet@univ-lorraine.fr>
+# co-author : Hussein AL-NATSHEH <hussein.al-natsheh@ish-lyon.cnrs.fr.>
+# Affiliation: University of Lyon, ERIC Laboratory, Lyon2, University of Lorraine
 
 # Thanks to ISTEX project for the foundings
 
@@ -42,11 +42,11 @@ class Paragraphs(object):
 		self.istex_tag = istex_tag
 		self.wiki_tag = wiki_tag
 		self.index = dict()
+		self.inversed_index = dict()
 		self.paper_count = 0
 		self.wiki_count = 0
 
 	def __iter__(self):
- 
 ## UCBL data loading
 		if self.ucbl is not None:
 			ucbl = self.ucbl
@@ -61,53 +61,37 @@ class Paragraphs(object):
 					words_lst = self.tokenize(u_line)
 					try :
 						self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-						self.index[self.paper_count] = "UCBL"+doc["doi"]
+						self.index[self.paper_count] = "UCBL"+doc["istex_id"]
+						self.inversed_index["UCBL"+doc["istex_id"]] = self.paper_count
 					except : continue
 				else:
 					yield line
-					self.index[self.paper_count] = "UCBL"+doc["doi"]
+					self.index[self.paper_count] = "UCBL"+doc["istex_id"]
+					self.inversed_index["UCBL"+doc["istex_id"]] = self.paper_count
 				self.paper_count += 1
 		self.ucbl_count = self.paper_count
-## ISTEX data loading
-		first_year = 1990
-		last_year = 2016
 
+## ISTEX data loading
 		if self.istex is not None:
 			istex = self.istex
-			# ordered to complete the list of documents to read in case the smallest files does not contain enough documents
-			for y in sorted(range(first_year,last_year), reverse=True) :
-				try :
-					f=open(os.path.join(istex,str(y)+"json_perfect.json"), "r")
-					js = json.load(f)
-					f.close()
-				except :
-					#print os.path.join(istex,str(y)+"json_perfect.json")
-					#print "Year failed ", y 
-					pass
-				try :
-					f=open(os.path.join(istex, str(y)+"articles_json_perfect.json"), "r")
-					js += json.load(f)
-					f.close()
-				except :
-					#print "Year article", y 
-					pass
-				for doc in  js:
-					abstract = ""
-					if "abstract" in doc :
-						abstract = doc["abstract"]
-					line = doc["title"]+" __ " + abstract
+			for fname in os.listdir(istex):
+				for doc in json.load(open(os.path.join(istex, fname))):
+					line = doc["title"]+" __ " + doc["abstract"]
 					if self.tokenize:
 						u_line = self.to_unicode(line)
 						words_lst = self.tokenize(u_line)
 						try :
 							self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-							self.index[self.paper_count] = "ISTEX"+doc["doi"]
+							self.index[self.paper_count] = "ISTEX"+doc["istex_id"]
+							self.inversed_index["ISTEX"+doc["istex_id"]] = self.paper_count
 						except : pass
 					else:
 						yield line
-						self.index[self.paper_count] = "ISTEX"+doc["doi"]
+						self.index[self.paper_count] = "ISTEX"+doc["istex_id"]
+						self.inversed_index["ISTEX"+doc["istex_id"]] = self.paper_count
 					self.paper_count += 1
 		self.istex_count = self.paper_count - self.ucbl_count
+
 ## Wikipedia data itteration
 		if self.wiki is not None:
 			wiki = self.wiki
@@ -128,6 +112,7 @@ class Paragraphs(object):
 							else:
 								yield line
 							self.index[self.paper_count] = "WIKI"+str(self.wiki_count)
+							self.inversed_index["WIKI"+str(self.wiki_count)] = self.paper_count
 							self.paper_count += 1
 							self.wiki_count += 1
 
