@@ -81,7 +81,7 @@ if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--vectors", default="results/output_svd.pickle", type=str,
 	                     help='location of the decomposed document vectors (pickle file)')
-	parser.add_argument("--doc_dict", default="results/output_paragraph_inverse_index.json", type=str,
+	parser.add_argument("--doc_dict", default="results/output_paragraph_index.json", type=str,
 	                     help='location of index-to-doc_id dictionary (json file)')
 	parser.add_argument("--count_positive", default=183, type=int,
 	                     help='the count of positive examples, i.e. mental-\
