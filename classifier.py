@@ -69,8 +69,6 @@ def search_top_relevant(sim_results, doc_id_dict, sim_th, count_positive):
 		if r:
 			related_indecies.append((i, sim_results[i,1]))
 	results = dict()
-	doc_ids = doc_id_dict.keys()
-	nb_doc_ids = len(doc_ids)
 	for i, score in related_indecies:
 		doc_id = doc_id_dict[str(count_positive + i)]
 		results[doc_id[5:]] = score
@@ -181,5 +179,5 @@ if __name__ == "__main__" :
 	# dumping results
 	if not os.path.exists(out_dir):
 		os.makedirs(out_dir)
-	json.dump(results, open(out_dir+'/results.json','wb'))
+	pickle.dump(results, open(out_dir+'/results.pickle','wb'))
 	pickle.dump(classifier,open(out_dir+'/model.pickle','wb'))
