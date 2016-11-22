@@ -123,7 +123,7 @@ class ParagraphsDict(object):
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_183.json', type=str) # is a .json file
+	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_182.json', type=str) # is a .json file
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # path to ISTEX corpus
 	parser.add_argument("--istex_mr", default='sample_data/MentalRotationInMetaDataIstexWithoutAnnotated.json', type=str) # is a .json file
 	parser.add_argument("--nb_selec", default=400, type=int) # number of smples
