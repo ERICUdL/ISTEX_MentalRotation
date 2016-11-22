@@ -81,7 +81,7 @@ if __name__ == "__main__" :
 	                     help='location of the decomposed document vectors (pickle file)')
 	parser.add_argument("--doc_dict", default="results/output_paragraph_index.json", type=str,
 	                     help='location of index-to-doc_id dictionary (json file)')
-	parser.add_argument("--count_positive", default=183, type=int,
+	parser.add_argument("--count_positive", default=182, type=int,
 	                     help='the count of positive examples, i.e. mental-\
 	                     rotation articles. It also corresponds to the max\
 	                     index where all indices below are for positive\

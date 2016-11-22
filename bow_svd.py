@@ -27,7 +27,7 @@ if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--wiki_dir", default="sample_data/wiki", type=str) # contains wikipedia text files
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # contains .json files
-	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_183.json', type=str) # is a .json file
+	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_182.json', type=str) # is a .json file
 	parser.add_argument("--max_nb_wiki", default=100000, type=int) # maximum number of Wikipedia paragraphs to use
 	parser.add_argument("--paragraphs_per_article", default=2, type=int) # maximum number of paragraphs to load per article
 	parser.add_argument("--vectorizer_type", default="tfidf", type=str) # possible values: "tfidf" and "count", futurework: "doc2vec"
