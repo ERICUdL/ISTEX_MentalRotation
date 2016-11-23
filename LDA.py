@@ -84,6 +84,9 @@ if __name__ == "__main__" :
 	input_dict = pickle.load(f)
 	nb_articles = len(input_dict)
 	f.close()
+
+	if nb_articles == 0:
+		raise NameError('The results file is empty, please provide an input file that contains istex_ids')
 	keys = np.array(range(nb_articles),dtype=np.object)
 	values = np.array(range(nb_articles),dtype=np.object)
 

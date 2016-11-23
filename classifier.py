@@ -58,7 +58,8 @@ def sorted_results(sim_results, doc_id_dict, count_positive):
 	results = dict()
 	for i, score in enumerate(sim_results[:,1]):
 		doc_id = doc_id_dict[str(count_positive + i)]
-		results[doc_id[5:]] = score
+		doc_id = doc_id.split('_')[1]
+		results[doc_id] = score
 	sorted_results = OrderedDict(sorted(results.items(), key=lambda k: k[1], reverse=True))
 	return sorted_results
 
@@ -71,7 +72,8 @@ def search_top_relevant(sim_results, doc_id_dict, sim_th, count_positive):
 	results = dict()
 	for i, score in related_indecies:
 		doc_id = doc_id_dict[str(count_positive + i)]
-		results[doc_id[5:]] = score
+		doc_id = doc_id.split('_')[1]
+		results[doc_id] = score
 	sorted_results = OrderedDict(sorted(results.items(), key=lambda k: k[1], reverse=True))
 	return sorted_results
 
@@ -96,9 +98,9 @@ if __name__ == "__main__" :
 	                     help='1 if you want to retun all ranked results. 0 otherwise')
 	parser.add_argument("--step", default=0.001, type=float,
 	                     help='The step size for reducing the similarity threshold')
-	parser.add_argument("--training_size", default=300, type=int,
+	parser.add_argument("--training_size", default=600, type=int,
 	                     help='the size of training dataset for the classifier')
-	parser.add_argument("--testing_size", default=100, type=int,
+	parser.add_argument("--testing_size", default=200, type=int,
 	                     help='the size of testing dataset for the classifier')
 	parser.add_argument("--n_iterations", default=10, type=int,
 	                     help='number of iterations to be averaged for \
@@ -171,7 +173,7 @@ if __name__ == "__main__" :
 			results = search_top_relevant(sim_results, doc_id_dict, sim_th,
 			                              count_positive)
 			if len(results) > min_relevant:
-				print 'number of ISTEX_ID of articles that are classified as mental-retotation'
+				print 'number of ISTEX_ID of articles that are classified as mental-rotation'
 				print 'with a probability value of at least ', sim_th
 				print len(results)
 				break

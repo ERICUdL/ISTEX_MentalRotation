@@ -28,6 +28,7 @@ if __name__ == "__main__" :
 	parser.add_argument("--wiki_dir", default="sample_data/wiki", type=str) # contains wikipedia text files
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str) # contains .json files
 	parser.add_argument("--ucbl_file", default='sample_data/sportArticlesAsIstex_UniqID_182.json', type=str) # is a .json file
+	parser.add_argument("--istex_mr_file", default='sample_data/MentalRotationInMetaDataIstexWithoutAnnotated.json', type=str) # is a .json file
 	parser.add_argument("--max_nb_wiki", default=100000, type=int) # maximum number of Wikipedia paragraphs to use
 	parser.add_argument("--paragraphs_per_article", default=2, type=int) # maximum number of paragraphs to load per article
 	parser.add_argument("--vectorizer_type", default="tfidf", type=str) # possible values: "tfidf" and "count", futurework: "doc2vec"
@@ -35,7 +36,7 @@ if __name__ == "__main__" :
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
 	parser.add_argument("--stop_words", default=1, type=int) # filtering out English stop-words
-	parser.add_argument("--vec_size", default=50, type=int) # the size of the vector in the semantics space
+	parser.add_argument("--vec_size", default=150, type=int) # the size of the vector in the semantics space
 	parser.add_argument("--min_count", default=20, type=int) # minimum frequency of the token to be included in the vocabulary
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
 	parser.add_argument("--debug", default=0, type=int) # embed IPython to use the decomposed matrix while running
@@ -48,6 +49,9 @@ if __name__ == "__main__" :
 	if istex == "None":
 		istex = None
 	ucbl = args.ucbl_file
+	istex_mr_file = args.istex_mr_file
+	if istex_mr_file == "None":
+		istex_mr_file = None
 	wiki_dir = args.wiki_dir
 	if wiki_dir == "None":
 		wiki_dir = None
@@ -74,7 +78,7 @@ if __name__ == "__main__" :
 	compress = args.compress
 	out_dir = args.out_dir
 	
-	paragraphs = Paragraphs(istex=istex, ucbl=ucbl, wiki=wiki_dir, max_nb_wiki_paragraphs=max_nb_wiki, paragraphs_per_article=paragraphs_per_article)
+	paragraphs = Paragraphs(istex=istex, ucbl=ucbl, istex_mr=istex_mr_file, wiki=wiki_dir, max_nb_wiki_paragraphs=max_nb_wiki, paragraphs_per_article=paragraphs_per_article)
 
 	if vectorizer_type == "count":
 		vectorizer = CountVectorizer(input='content',
@@ -111,13 +115,17 @@ if __name__ == "__main__" :
 			bow = []
 
 	#Compute the average cosine similarity within ucbl vectors
-	ucbl_lst = decomposed_bow[:paragraphs.ucbl_count]
+	if istex_mr_file is not None:
+		positives_count = paragraphs.ucbl_count + paragraphs.istex_mr_count
+	else:
+		positives_count = paragraphs.ucbl_count
+	ucbl_lst = decomposed_bow[:positives_count]
 	ucbl_inner_sim =  avg_inner_sim(ucbl_lst)
-	print 'average cosine similarity within ucbl articles', ucbl_inner_sim
+	print 'average cosine similarity within mental rotation articles', ucbl_inner_sim
 
 	#Compute the average cosine similarity within articles randomly selected from ISTEX (other than ucbl)
-	neg_inner_sim = n_neg_sampling_avg_inner_sim(decomposed_bow, paragraphs.ucbl_count, nb_neg_samplings)
-	print 'average cosine similarity within articles randomly selected from ISTEX articles (same set size of ucbl)', neg_inner_sim
+	neg_inner_sim = n_neg_sampling_avg_inner_sim(decomposed_bow, positives_count, nb_neg_samplings)
+	print 'average cosine similarity within articles randomly selected from ISTEX articles (same set size of mental rotation ones)', neg_inner_sim
 	
 	#Compute the estimated represeantation quality
 	rep_eval = ucbl_inner_sim - neg_inner_sim
