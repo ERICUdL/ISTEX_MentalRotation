@@ -31,10 +31,11 @@ class Lemmatizer(object):
  		return [t.lemma_ for t in line if not t.lemma_.isdigit()]
 
 class Paragraphs(object):
-	def __init__(self, istex=None, ucbl=None, wiki=None, tokenize=False, max_nb_wiki_paragraphs=None,
+	def __init__(self, istex=None, ucbl=None, istex_mr=None, wiki=None, tokenize=False, max_nb_wiki_paragraphs=None,
 	                 paragraphs_per_article=None, istex_tag=None, wiki_tag=None):
 		self.istex = istex
 		self.ucbl = ucbl
+		self.istex_mr = istex_mr
 		self.wiki = wiki
 		self.tokenize = tokenize
 		self.max_nb_wiki_paragraphs = max_nb_wiki_paragraphs
@@ -49,48 +50,76 @@ class Paragraphs(object):
 	def __iter__(self):
 ## UCBL data loading
 		if self.ucbl is not None:
-			ucbl = self.ucbl
-			r=open(ucbl,'r')
-			data=json.load(r)
-			r.close()
-			# for UCBL data
+
+			f=open(self.ucbl,'r')
+			data=json.load(f)
+			f.close()
+
 			for doc in data :
-				line = doc["title"]+" __ " + doc["abstract"]
+				line = doc["title"] + " __ " + doc["abstract"]
 				if self.tokenize:
 					u_line = self.to_unicode(line)
 					words_lst = self.tokenize(u_line)
 					try :
 						self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-						self.index[self.paper_count] = "UCBL"+doc["istex_id"]
-						self.inversed_index["UCBL"+doc["istex_id"]] = self.paper_count
+						self.index[self.paper_count] = 'UCBL_' + doc["istex_id"]
+						self.inversed_index['UCBL_' + doc["istex_id"]] = self.paper_count
 					except : continue
 				else:
 					yield line
-					self.index[self.paper_count] = "UCBL"+doc["istex_id"]
-					self.inversed_index["UCBL"+doc["istex_id"]] = self.paper_count
+					self.index[self.paper_count] = 'UCBL_' + doc["istex_id"]
+					self.inversed_index['UCBL_' + doc["istex_id"]] = self.paper_count
 				self.paper_count += 1
+
 		self.ucbl_count = self.paper_count
+
+## ISTEX Mental Rotation (istex_mr) data loading
+		if self.istex_mr is not None:
+			f=open(self.istex_mr,'r')
+			data=json.load(f)
+			f.close()
+
+			for doc in data :
+				line = doc["title"] + " __ " + doc["abstract"]
+				if self.tokenize:
+					u_line = self.to_unicode(line)
+					words_lst = self.tokenize(u_line)
+					try :
+						self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
+						self.index[self.paper_count] = 'MRISTEX_' + doc["istex_id"]
+						self.inversed_index['MRISTEX_' + doc["istex_id"]] = self.paper_count
+					except : continue
+				else:
+					yield line
+					self.index[self.paper_count] = 'MRISTEX_' + doc["istex_id"]
+					self.inversed_index['MRISTEX_' + doc["istex_id"]] = self.paper_count
+				self.paper_count += 1
+		self.istex_mr_count = self.paper_count - self.ucbl_count
 
 ## ISTEX data loading
 		if self.istex is not None:
-			istex = self.istex
-			for fname in os.listdir(istex):
-				for doc in json.load(open(os.path.join(istex, fname))):
-					line = doc["title"]+" __ " + doc["abstract"]
+			for fname in os.listdir(self.istex):
+
+				f=open(os.path.join(self.istex, fname),'r')
+				data=json.load(f)
+				f.close()
+
+				for doc in data :
+					line = doc["title"] + " __ " + doc["abstract"]
 					if self.tokenize:
 						u_line = self.to_unicode(line)
 						words_lst = self.tokenize(u_line)
 						try :
 							self.yield_element(words_lst, tag=self.istex_tag, count=self.paper_count)
-							self.index[self.paper_count] = "ISTEX"+doc["istex_id"]
-							self.inversed_index["ISTEX"+doc["istex_id"]] = self.paper_count
-						except : pass
+							self.index[self.paper_count] = 'ISTEX_' + doc["istex_id"]
+							self.inversed_index['ISTEX_' + doc["istex_id"]] = self.paper_count
+						except : continue
 					else:
 						yield line
-						self.index[self.paper_count] = "ISTEX"+doc["istex_id"]
-						self.inversed_index["ISTEX"+doc["istex_id"]] = self.paper_count
+						self.index[self.paper_count] = 'ISTEX_' + doc["istex_id"]
+						self.inversed_index['ISTEX_' + doc["istex_id"]] = self.paper_count
 					self.paper_count += 1
-		self.istex_count = self.paper_count - self.ucbl_count
+		self.istex_count = self.paper_count - (self.ucbl_count + self.istex_mr_count)
 
 ## Wikipedia data itteration
 		if self.wiki is not None:
@@ -111,8 +140,8 @@ class Paragraphs(object):
 								self.yield_element(words_lst, tag=self.wiki_tag, count=self.wiki_count)
 							else:
 								yield line
-							self.index[self.paper_count] = "WIKI"+str(self.wiki_count)
-							self.inversed_index["WIKI"+str(self.wiki_count)] = self.paper_count
+							self.index[self.paper_count] = "WIKI" + '_' + str(self.wiki_count)
+							self.inversed_index["WIKI" + '_' + str(self.wiki_count)] = self.paper_count
 							self.paper_count += 1
 							self.wiki_count += 1
 
@@ -127,7 +156,10 @@ class Paragraphs(object):
 		print 'number of abstracts: ', self.istex_count + self.ucbl_count
 		print 'total number of paragraphs and abstracts: ', self.paper_count
 		print 'number of ucbl articles: ', self.ucbl_count
-		print 'number of istex articles other than ucbl: ', self.istex_count
+		if self.istex_mr is not None:
+			print 'number of istex_mr articles: ', self.istex_mr_count
+			print 'total number of mental rotation articles: ', self.istex_mr_count + self.ucbl_count
+		print 'number of istex articles other than mental rotation ones: ', self.istex_count
 
 	def to_unicode(self,line) :
 			try :
