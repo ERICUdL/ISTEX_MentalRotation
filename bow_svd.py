@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Istex_Mental_Rotation.
-# Copyright (C) 2016 3ST ERIC Laboratory.
+# Copyright (C) 2017 SSbE ERIC Laboratory.
 #
 # This is a free software; you can redistribute it and/or modify it
 # under the terms of the Revised BSD License; see LICENSE file for
@@ -136,7 +136,7 @@ if __name__ == "__main__" :
 		try:
 			pickle.dump(decomposed_bow, open(out_dir+'/output_svd.pickle','wb'))
 		except:
-			print "we could not dump the decomposed_bow in pickle. Using pickle instead:"
+			print "we could not dump the decomposed_bow in pickle. Using json instead:"
 			try:
 				json.dump(decomposed_bow, open(out_dir+'/output_svd.json','wb'))
 			except:
