@@ -124,8 +124,8 @@ def stat_check_vocabulary(keys, values, groups_avoid=["UCBL", "MRISTEX"], key_ph
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--input_file", default='sample_data/results.pickle', type=str) # is a .json file
-	parser.add_argument("--output_file", default='resultsTest/results_lda.txt', type=str) # is a .json file
+	parser.add_argument("--input_file", default='results/LDA_res_input.pickle', type=str) # is a .pickle file
+	parser.add_argument("--output_file", default='results/results_lda.txt', type=str) # is a .json file
 	parser.add_argument("--lemmatizer", default=0, type=int) # for using lemmatization_tokenizer
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
