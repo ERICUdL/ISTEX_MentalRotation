@@ -125,7 +125,7 @@ def stat_check_vocabulary(keys, values, groups_avoid=["UCBL", "MRISTEX"], key_ph
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--input_file", default='results/LDA_res_input.pickle', type=str) # is a .pickle file
-	parser.add_argument("--output_file", default='results/results_lda.txt', type=str) # is a .json file
+	parser.add_argument("--output_file", default='results_lda.txt', type=str) # is a .json file
 	parser.add_argument("--lemmatizer", default=0, type=int) # for using lemmatization_tokenizer
 	parser.add_argument("--mx_ngram", default=2, type=int) # the upper bound of the ngram range
 	parser.add_argument("--mn_ngram", default=1, type=int) # the lower bound of the ngram range
@@ -136,7 +136,7 @@ if __name__ == "__main__" :
 	parser.add_argument("--stop_words", default=1, type=int) # filtering out English stop-words
 	parser.add_argument("--min_count", default=12	, type=int) # minimum frequency of the token to be included in the vocabulary
 	parser.add_argument("--max_df", default=0.95, type=float) # how much vocabulary percent to keep at max based on frequency
-	parser.add_argument("--out_dir", default="resultsTest", type=str) # name of the output directory
+	parser.add_argument("--out_dir", default="results/", type=str) # name of the output directory
 	parser.add_argument("--min_nb_clusters", default=2, type=int) # minimum number of cluster we try
 	parser.add_argument("--max_nb_clusters", default=60, type=int) #  maximum number of cluster we try
 	parser.add_argument("--key_phrase", default="mental rotation", type=str) # the key phrase to retrieve in the metadata of the selected istex 
@@ -188,7 +188,7 @@ if __name__ == "__main__" :
 	tf_feature_names = tf_idf_vectorizer.get_feature_names()
 
 # we open the files only once to avoid to open them to often, for each loop
-	generic = open(output_file, "w")
+	generic = open(os.path.join(out_dir,output_file), "w")
 	ucbl_out = open(os.path.join(out_dir, "lda_ucbl_cluster.txt"), "w")
 	istex_out = open(os.path.join(out_dir, "lda_mristex_cluster.txt"), "w") 
 
