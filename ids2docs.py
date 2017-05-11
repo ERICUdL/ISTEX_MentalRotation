@@ -29,7 +29,7 @@ def get_doc_by_istex_id(istex_ids, istex_dir):
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--results_file", default='results/top10K_results.pickle', type=str)
+	parser.add_argument("--results_file", default='results/results.pickle', type=str)
 	parser.add_argument("--istex_dir", default='sample_data/ISTEX/', type=str)
 	parser.add_argument("--out_file", default="LDA_res_input.pickle", type=str) # name of the output file
 	parser.add_argument("--out_dir", default="results", type=str) # name of the output directory
