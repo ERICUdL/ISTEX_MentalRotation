@@ -15,12 +15,12 @@ if __name__ == "__main__" :
 	parser.add_argument("--svd_inv_index", default='../RecSys_Exp_files/182_381_vec150_results/output_paragraph_inversed_index.json', type=str)
 	parser.add_argument("--topic_key_phrase", default='Peripheral%20Vascular%20Disease', type=str)
 	parser.add_argument("--use_categories", default=1, type=int)
-	parser.add_argument("--all_rand", default=0, type=int)
+	parser.add_argument("--all_rand", default=1, type=int)
 	parser.add_argument("--negative_ratio", default=1.0, type=float)
 	parser.add_argument("--classifier", default='RFC', type=str) # possible values 'RFC' and 'GBC'
 	parser.add_argument("--clf_out", default='results/PV_Disease_clf.pickle', type=str)
 	parser.add_argument("--results_out", default='results/PV_Disease_ranked_results.pickle', type=str)
-	parser.add_argument("--use_synset", default=0, type=int)
+	parser.add_argument("--use_synset", default=0, type=str) # synset as a comma seperated text
 
 	args = parser.parse_args()
 	svd = pickle.load(open(args.svd_array,'rb'))
@@ -56,7 +56,11 @@ if __name__ == "__main__" :
 	corpus_ids = inversed_index.keys()
 	initial_corpus, test = istex_positives_input(topic, topic, corpus_ids, categories=categories)
 	if use_synset:
-		synset = ['conservation%20biology', 'Animal%20conservation', 'Biological%20Conservation', 'Biodiversity%20conservation']
+		synset_t = use_synset.split(', ')
+		synset = []
+		for syn in synset_t:
+			x = syn.replace(' ','%20')
+			synset.append(x)
 		initial_corpus = np.array(initial_corpus, dtype=np.object)
 		for syn in synset:
 			syn_addition, _ = istex_positives_input(topic, syn, corpus_ids, categories=categories)

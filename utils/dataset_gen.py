@@ -59,7 +59,7 @@ def istex_positives_input(topic_query, topic_test, corpus_ids, categories=0):
 	test = list(test_set)
 	return initial_corpus, test
 
-def istex_negatives_input(q, initial_corpus, corpus_ids, neg_random_size, all_rand):
+def istex_negatives_input(q, initial_corpus, corpus_ids, neg_random_size, all_rand=1):
 	# q is the topic key-pharse
 	# corpus_ids are from svd_inversed_index.keys()
 	# initial_corpus is an output of istex_positives_input() fuction
