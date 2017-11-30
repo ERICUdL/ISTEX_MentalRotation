@@ -2,7 +2,7 @@
 
 ## Repeatability code for SSbE paper of SERecSys Workshop of ICDM:
 
- - To start, you would need to generate the dataset using the script inside IstexDataDownload_Treatment folder
+ - To start, you would need to generate the dataset using the script inside IstexDataDownload_Treatment folder (you may also dowload it from: ``https://drive.google.com/drive/folders/1i1I3fi6Qgdz-A4hI8_MkjZCg-EPieTi_?usp=sharing``)
 
  - The main file to start with is bow_svd.py. It will transform the whole corpus into its semantic features representation.
 
