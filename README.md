@@ -1,6 +1,6 @@
 # ISTEX_MentalRotation use-case of SSbE
 
-## Repeatability code for SSbE paper of SERecSys Workshop of ICDM:
+## Reproducibility code for SSbE paper of SERecSys Workshop of ICDM:
 
  - To start, you would need to generate the dataset using the script inside IstexDataDownload_Treatment folder (you may also dowload it from: ``https://drive.google.com/drive/folders/1i1I3fi6Qgdz-A4hI8_MkjZCg-EPieTi_?usp=sharing``)
 
